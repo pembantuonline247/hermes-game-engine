@@ -1,0 +1,75 @@
+"steamcmd"
+{
+    // =========================================================================
+    // steam.vdf — SteamCMD build script template for Hermes Game Engine
+    // =========================================================================
+    // SteamPipe content builder script for uploading builds to Steam.
+    //
+    // Usage:
+    //   steamcmd +login <username> +run_app_build "path\to\steam.vdf" +quit
+    //
+    // Or via the SDK's steamcmd.exe:
+    //   steamcmd.exe +login your_steam_username +run_app_build "C:\path\to\steam.vdf" +quit
+    //
+    // Required environment variables or substitutions:
+    //   %STEAM_APP_ID%      — Your Steam App ID (e.g., 1234560)
+    //   %STEAM_BUILD_DESC%  — Description for this build (e.g., "v1.0.3 - bugfixes")
+    //   %STEAM_DEPOT_ID%    — Your Steam Depot ID (e.g., 1234561)
+    //   %STEAM_CONTENT_ROOT% — Path to the build output folder
+    // =========================================================================
+
+    "AppBuild"
+    {
+        // Steam App ID (set your actual ID here)
+        "AppID" "%STEAM_APP_ID%"
+
+        // Description for this build (shown in Steamworks build history)
+        "Desc" "%STEAM_BUILD_DESC%"
+
+        // Root content directory — all paths below are relative to this
+        "ContentRoot" "%STEAM_CONTENT_ROOT%"
+
+        // Build output directory (SteamPipe writes intermediate files here)
+        "BuildOutput" ".\steam_output\"
+
+        // Depots — list all depots that belong to this app
+        "Depots"
+        {
+            // Primary game depot (replace %STEAM_DEPOT_ID% with your actual depot ID)
+            "%STEAM_DEPOT_ID%"
+            {
+                // Local path to the files that go into this depot
+                // This is relative to ContentRoot
+                "FileMapping"
+                {
+                    "LocalPath" "Windows/*"
+                    "DepotPath" "."
+                    "recursive" "1"
+                }
+
+                // Path to a file listing exclusions (one pattern per line)
+                // Optional — uncomment and create if you need it
+                // "FileExclusion" ".\steam_exclusions.txt"
+
+                // Windows-specific install script (optional)
+                // "InstallScript" "install_script.vdf"
+            }
+
+            // Example: PDB / debug symbols depot (optional)
+            /*
+            "1234562"
+            {
+                "FileMapping"
+                {
+                    "LocalPath" "Windows/*.pdb"
+                    "DepotPath" "."
+                    "recursive" "1"
+                }
+            }
+            */
+        }
+
+        // Set the build to live on completion (default: 0 = don't set live)
+        "SetLive" "0"
+    }
+}

@@ -1,0 +1,183 @@
+# =============================================================================
+# Hermes Game Engine — Unity Build Pipeline
+# =============================================================================
+# Triggers:
+#   - Push to main or master
+#   - Manual trigger via workflow_dispatch (with build target selection)
+#
+# Matrix targets: WebGL, StandaloneWindows64, Android
+# =============================================================================
+
+name: Unity Build Pipeline
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      target_platform:
+        description: 'Override the matrix — build a single target only'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - WebGL
+          - StandaloneWindows64
+          - Android
+      build_options:
+        description: 'Extra Unity batchmode args (e.g., -nographics -force-vulkan)'
+        required: false
+        default: ''
+        type: string
+
+# Global environment variables available to all jobs
+env:
+  UNITY_USERNAME: ${{ secrets.UNITY_USERNAME }}
+  UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+  UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+  UNITY_VERSION: 2022.3.17f1   # <-- Update to match your project's Unity version
+
+concurrency:
+  group: unity-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build — ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false          # Let other matrix legs finish even if one fails
+      matrix:
+        target: [WebGL, StandaloneWindows64, Android]
+        include:
+          - target: WebGL
+            unity_build_method: BuildPipeline.BuildPlayerWebGL
+            artifact_name: hermes-webgl
+            artifact_path: Builds/WebGL
+          - target: StandaloneWindows64
+            unity_build_method: BuildPipeline.BuildPlayerStandaloneWindows64
+            artifact_name: hermes-windows64
+            artifact_path: Builds/Windows
+          - target: Android
+            unity_build_method: BuildPipeline.BuildPlayerAndroid
+            artifact_name: hermes-android
+            artifact_path: Builds/Android
+
+    # If a manual override was supplied, skip matrix entries that don't match
+    if: |
+      (github.event_name != 'workflow_dispatch') ||
+      (github.event.inputs.target_platform == '') ||
+      (github.event.inputs.target_platform == matrix.target)
+
+    steps:
+      # ---------------------------------------------------
+      # 1. Checkout repository
+      # ---------------------------------------------------
+      - name: 📦 Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      # ---------------------------------------------------
+      # 2. Cache Unity Library folder (massive speed-up)
+      # ---------------------------------------------------
+      - name: 💾 Cache Library folder
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-${{ matrix.target }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-${{ matrix.target }}-
+            Library-
+
+      # ---------------------------------------------------
+      # 3. Activate Unity license
+      # ---------------------------------------------------
+      - name: 🔑 Activate Unity License
+        run: |
+          # Download and install the license activation script
+          wget -q -O unity_license_activate.sh \
+            https://raw.githubusercontent.com/game-ci/unity-activate/main/unity_license_activate.sh
+          chmod +x unity_license_activate.sh
+
+          # Create the license file from secret
+          echo "${{ secrets.UNITY_LICENSE }}" > ./UnityLicense.ulf
+
+          # Activate
+          ./unity_license_activate.sh ./UnityLicense.ulf
+
+      # ---------------------------------------------------
+      # 4. Unity Build (via Docker)
+      # ---------------------------------------------------
+      - name: 🔨 Unity Build — ${{ matrix.target }}
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_USERNAME }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: ${{ matrix.target }}
+          projectPath: .
+          unityVersion: ${{ env.UNITY_VERSION }}
+          buildMethod: ${{ matrix.unity_build_method }}
+          versioning: Semantic
+          androidAppBundle: false
+          allowDirtyBuild: false
+          customParameters: ${{ github.event.inputs.build_options || '' }}
+
+      # ---------------------------------------------------
+      # 5. Upload build artifacts
+      # ---------------------------------------------------
+      - name: 📤 Upload Build Artifact — ${{ matrix.target }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_path }}
+
+      # ---------------------------------------------------
+      # 6. (WebGL only) Upload as downloadable .zip for easy testing
+      # ---------------------------------------------------
+      - name: 🌐 Package & Upload WebGL Downloadable
+        if: matrix.target == 'WebGL'
+        run: |
+          cd Builds/WebGL
+          zip -r ../../hermes-webgl.zip ./*
+        shell: bash
+
+      - name: 🌐 Upload WebGL Zip Artifact
+        if: matrix.target == 'WebGL'
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermes-webgl-downloadable
+          path: hermes-webgl.zip
+
+      # ---------------------------------------------------
+      # 7. Cleanup: Deactivate Unity license
+      # ---------------------------------------------------
+      - name: 🧹 Deactivate Unity License
+        if: always()
+        run: |
+          wget -q -O unity_license_deactivate.sh \
+            https://raw.githubusercontent.com/game-ci/unity-activate/main/unity_license_deactivate.sh
+          chmod +x unity_license_deactivate.sh
+          ./unity_license_deactivate.sh || true
+
+  # =========================================================================
+  # Notification job — runs after all builds complete
+  # =========================================================================
+  notify:
+    name: 📬 Notify
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: always()
+    steps:
+      - name: Dispatch status
+        run: |
+          STATUS='✅ Success'
+          if [ '${{ needs.build.result }}' != 'success' ]; then
+            STATUS='❌ Failed'
+          fi
+          echo "Build result: $STATUS"
+          echo "ref: ${{ github.ref }}"
+          echo "commit: ${{ github.sha }}"
