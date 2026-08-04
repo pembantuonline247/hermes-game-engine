@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="site_title">Hermes Game Engine — Published Games</title>
+  <meta name="description" content="Hermes Game Engine — Automated game publishing, CI/CD pipeline, multi-channel distribution.">
+  <meta property="og:title" content="Hermes Game Engine">
+  <meta property="og:description" content="🎮 Published games by Hermes — play Space Dodger, Neon Merge, and more.">
+  <meta property="og:image" content="https://games.pembantu.online/static/og-banner.png">
+  <meta property="og:url" content="https://games.pembantu.online">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Hermes Game Engine">
+  <meta name="twitter:description" content="🎮 Published games — play now">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: rgba(15, 15, 25, 0.7);
+      --text-primary: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --glass-border: rgba(99, 102, 241, 0.1);
+      --glass-hover: rgba(99, 102, 241, 0.3);
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.3);
+      --accent-secondary: #06b6d4;
+      --card-bg: rgba(15, 15, 25, 0.7);
+      --grid-color: rgba(99, 102, 241, 0.03);
+      --success: #22c55e;
+      --warning: #eab308;
+      --danger: #ef4444;
+      --gradient-1: #6366f1;
+      --gradient-2: #06b6d4;
+      --gradient-3: #8b5cf6;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated grid background */
+    .grid-bg {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image:
+        linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+      background-size: 60px 60px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .grid-bg::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.05) 0%, transparent 60%);
+      animation: gridPulse 8s ease-in-out infinite;
+    }
+
+    @keyframes gridPulse {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.05); }
+    }
+
+    /* Floating orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb-1 {
+      width: 400px; height: 400px;
+      background: rgba(99, 102, 241, 0.12);
+      top: -100px; right: -100px;
+      animation: orbFloat 12s ease-in-out infinite;
+    }
+    .orb-2 {
+      width: 300px; height: 300px;
+      background: rgba(6, 182, 212, 0.08);
+      bottom: -50px; left: -50px;
+      animation: orbFloat 15s ease-in-out infinite reverse;
+    }
+    .orb-3 {
+      width: 200px; height: 200px;
+      background: rgba(139, 92, 246, 0.08);
+      top: 50%; left: 50%;
+      animation: orbFloat 10s ease-in-out infinite 2s;
+    }
+
+    @keyframes orbFloat {
+      0%, 100% { transform: translate(0, 0); }
+      33% { transform: translate(30px, -30px); }
+      66% { transform: translate(-20px, 20px); }
+    }
+
+    /* Glass morphism */
+    .glass {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+    }
+
+    .glass:hover {
+      border-color: var(--glass-hover);
+    }
+
+    /* Nav */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .navbar-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      font-size: 1.2rem;
+      background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-sub {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      -webkit-text-fill-color: var(--text-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      display: block;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text-primary); }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-live {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--success);
+    }
+
+    .status-live::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Hero Section */
+    .hero {
+      position: relative;
+      z-index: 1;
+      padding: 140px 24px 80px;
+      text-align: center;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 100px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      font-size: 0.8rem;
+      color: var(--accent);
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2), var(--gradient-3));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      max-width: 650px;
+      margin: 0 auto 32px;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    /* Tab filters */
+    .tab-bar {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+
+    .tab-btn {
+      padding: 8px 20px;
+      border-radius: 100px;
+      border: 1px solid var(--glass-border);
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      border-color: var(--accent);
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Game Grid */
+    .game-grid {
+      position: relative;
+      z-index: 1;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 24px;
+    }
+
+    .game-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .game-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--glass-hover);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 40px rgba(99, 102, 241, 0.05);
+    }
+
+    .game-thumb {
+      width: 100%;
+      height: 200px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(6, 182, 212, 0.1));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .game-thumb::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: linear-gradient(to top, var(--card-bg), transparent);
+    }
+
+    .game-platforms {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      gap: 6px;
+    }
+
+    .platform-chip {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .chip-web { background: rgba(99, 102, 241, 0.2); color: var(--accent); }
+    .chip-pc { background: rgba(6, 182, 212, 0.2); color: var(--accent-secondary); }
+    .chip-mobile { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
+
+    .game-body {
+      padding: 20px;
+    }
+
+    .game-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+    }
+
+    .game-dev {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .game-desc {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 16px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .game-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 12px;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    .game-version {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-family: monospace;
+    }
+
+    .game-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-play {
+      padding: 6px 16px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+      color: white;
+      border: none;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-play:hover {
+      opacity: 0.9;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .btn-ghost {
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--glass-border);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--text-muted);
+      color: var(--text-primary);
+    }
+
+    .status-ribbon {
+      position: absolute;
+      top: 12px;
+      left: -28px;
+      transform: rotate(-45deg);
+      padding: 2px 32px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .ribbon-live { background: var(--success); color: #000; }
+    .ribbon-beta { background: var(--warning); color: #000; }
+    .ribbon-draft { background: var(--text-muted); color: #fff; }
+
+    /* Pipeline Status Section */
+    .pipeline-section {
+      position: relative;
+      z-index: 1;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .section-header h2 {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .section-header p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .pipeline-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .pipeline-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .pipeline-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .pipeline-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .pipeline-icon.blue { background: rgba(99, 102, 241, 0.15); }
+    .pipeline-icon.cyan { background: rgba(6, 182, 212, 0.15); }
+    .pipeline-icon.purple { background: rgba(139, 92, 246, 0.15); }
+    .pipeline-icon.green { background: rgba(34, 197, 94, 0.15); }
+
+    .pipeline-card h3 {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .pipeline-step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 0;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .step-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .step-dot.green { background: var(--success); }
+    .step-dot.yellow { background: var(--warning); }
+    .step-dot.gray { background: var(--text-muted); }
+
+    .pipeline-card .chip {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+
+    .chip-success { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+    .chip-warning { background: rgba(234, 179, 8, 0.15); color: var(--warning); }
+
+    /* Footer */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--glass-border);
+      padding: 40px 24px;
+      text-align: center;
+    }
+
+    footer p {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    /* Empty state */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 24px;
+    }
+
+    .empty-state .emoji {
+      font-size: 4rem;
+      margin-bottom: 16px;
+    }
+
+    .empty-state h3 {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.3rem;
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .game-grid { grid-template-columns: 1fr; }
+      .hero-stats { gap: 24px; }
+      .hero h1 { font-size: 2rem; }
+    }
+
+    /* Fade in animation */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeIn 0.6s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in:nth-child(1) { animation-delay: 0.05s; }
+    .fade-in:nth-child(2) { animation-delay: 0.1s; }
+    .fade-in:nth-child(3) { animation-delay: 0.15s; }
+    .fade-in:nth-child(4) { animation-delay: 0.2s; }
+    .fade-in:nth-child(5) { animation-delay: 0.25s; }
+    .fade-in:nth-child(6) { animation-delay: 0.3s; }
+
+    /* Status light */
+    .status-light {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--success);
+    }
+    .status-light::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    .code-block {
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: var(--accent);
+      overflow-x: auto;
+      border: 1px solid var(--glass-border);
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Effects -->
+  <div class="grid-bg"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="/" style="text-decoration:none;">
+        <div class="logo">
+          HERMES
+          <span class="logo-sub">⚡ Game Engine</span>
+        </div>
+      </a>
+      <div class="nav-links">
+        <span class="status-badge status-live">Engine Online</span>
+        <a href="#games">Games</a>
+        <a href="#pipeline">Pipeline</a>
+        <a href="https://pembantu.online" target="_blank">Pembantu</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero fade-in">
+    <div class="hero-badge">
+      <span>🎮</span>
+      <span>v1.0.0 — Hermes Automated Game Pipeline</span>
+    </div>
+    <h1>GAMES PIBLISHED<br>BY HERMES</h1>
+    <p>
+      Fully automated game publishing pipeline. Unity WebGL, PC, and Mobile builds
+      compiled through CI/CD, injected with ad mediation, and deployed to web portals
+      and storefronts — all driven by Hermes.
+    </p>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-number" id="statPublished">0</div>
+        <div class="stat-label">Published</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">4</div>
+        <div class="stat-label">Target Platforms</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">5</div>
+        <div class="stat-label">Pipeline Stages</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">100%</div>
+        <div class="stat-label">Automated</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar fade-in" id="games">
+    <button class="tab-btn active" data-filter="all">🎮 All Games</button>
+    <button class="tab-btn" data-filter="web">🌐 WebGL</button>
+    <button class="tab-btn" data-filter="pc">🖥️ PC / Desktop</button>
+    <button class="tab-btn" data-filter="mobile">📱 Mobile</button>
+    <button class="tab-btn" data-filter="active">🟢 Active</button>
+    <button class="tab-btn" data-filter="beta">🔶 Beta</button>
+  </div>
+
+  <!-- Game Grid -->
+  <div class="game-grid fade-in" id="gameGrid">
+    <!-- Games rendered by JS -->
+  </div>
+
+  <!-- Pipeline Status -->
+  <section class="pipeline-section" id="pipeline">
+    <div class="section-header fade-in">
+      <h2>⚙️ BUILD PIPELINE STATUS</h2>
+      <p>Real-time status of the Hermes automated game compilation and distribution pipeline</p>
+      <div style="margin-top:12px;">
+        <span class="status-light">All Systems Operational</span>
+      </div>
+    </div>
+
+    <div class="pipeline-cards fade-in">
+      <!-- Unity Build -->
+      <div class="pipeline-card">
+        <div class="pipeline-card-header">
+          <div class="pipeline-icon blue">🎯</div>
+          <h3>Unity Compilation</h3>
+        </div>
+        <div class="pipeline-step"><span class="step-dot green"></span> Build Agent — Standby</div>
+        <div class="pipeline-step"><span class="step-dot green"></span> WebGL Export — Ready</div>
+        <div class="pipeline-step"><span class="step-dot green"></span> Android APK — Ready</div>
+        <div class="pipeline-step"><span class="step-dot green"></span> Windows Standalone — Ready</div>
+        <div class="chip chip-success">Headless Batchmode</div>
+      </div>
+
+      <!-- Ad Mediation -->
+      <div class="pipeline-card">
+        <div class="pipeline-card-header">
+          <div class="pipeline-icon cyan">📢</div>
+          <h3>Ad Mediation</h3>
+        </div>
+        <div class="pipeline-step"><span class="step-dot green"></span> AppLovin MAX — Configured</div>
+        <div class="pipeline-step"><span class="step-dot green"></span> Rewarded Video — Injected</div>
+        <div class="pipeline-step"><span class="step-dot green"></span> Interstitial — Injected</div>
+        <div class="pipeline-step"><span class="step-dot green"></span> Banner Fallback — Ready</div>
+        <div class="chip chip-success">Env-Injected Ad IDs</div>
+      </div>
+
+      <!-- Multi-Store -->
+      <div class="pipeline-card">
+        <div class="pipeline-card-header">
+          <div class="pipeline-icon purple">📦</div>
+          <h3>Store Deployment</h3>
+        </div>
+        <div class="pipeline-step"><span class="step-dot yellow"></span> Steam (steamcmd) — Awaiting Builds</div>
+        <div class="pipeline-step"><span class="step-dot yellow"></span> itch.io (butler) — Awaiting Builds</div>
+        <div class="pipeline-step"><span class="step-dot yellow"></span> Epic Games — Awaiting Builds</div>
+        <div class="pipeline-step"><span class="step-dot yellow"></span> Mobile (Fastlane) — Awaiting Builds</div>
+        <div class="chip chip-warning">Store Credentials Required</div>
+      </div>
+
+      <!-- Analytics -->
+      <div class="pipeline-card">
+        <div class="pipeline-card-header">
+          <div class="pipeline-icon green">📊</div>
+          <h3>Monitoring & Analytics</h3>
+        </div>
+        <div class="pipeline-step"><span class="step-dot green"></span> REST Revenue API — Hooked</div>
+        <div class="pipeline-step"><span class="step-dot green"></span> eCPM Tracking — Active</div>
+        <div class="pipeline-step"><span class="step-dot green"></span> ARPDAU Dashboard — Ready</div>
+        <div class="pipeline-step"><span class="step-dot green"></span> Build Logs — Captured</div>
+        <div class="chip chip-success">Central Dashboard</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>
+      <strong>Hermes Game Engine</strong> — Automated Publishing Pipeline<br>
+      Powered by Pembantu.Online &nbsp;·&nbsp; games.pembantu.online
+    </p>
+  </footer>
+
+  <!-- Game Detail Modal -->
+  <div id="gameModal" class="modal-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(10px);z-index:200;align-items:center;justify-content:center;padding:24px;">
+    <div class="modal-content" style="background:var(--bg-primary);border:1px solid var(--glass-border);border-radius:16px;max-width:500px;width:100%;padding:28px;position:relative;max-height:90vh;overflow-y:auto;">
+      <button onclick="closeModal()" style="position:absolute;top:12px;right:12px;background:none;border:none;color:var(--text-muted);font-size:24px;cursor:pointer;">✕</button>
+      <div id="modalIcon" style="font-size:3rem;text-align:center;margin-bottom:8px;"></div>
+      <h2 id="modalTitle" style="font-family:'Orbitron',monospace;font-size:1.2rem;text-align:center;margin-bottom:4px;"></h2>
+      <p id="modalDev" style="font-size:0.8rem;color:var(--text-muted);text-align:center;margin-bottom:12px;"></p>
+      <p id="modalDesc" style="font-size:0.85rem;color:var(--text-secondary);line-height:1.6;margin-bottom:16px;"></p>
+      <div id="modalPlatforms" style="display:flex;gap:6px;justify-content:center;margin-bottom:16px;"></div>
+      <div id="modalBadges" style="display:flex;gap:8px;justify-content:center;margin-bottom:16px;">
+        <span id="modalVersion" style="font-family:monospace;font-size:0.75rem;color:var(--text-muted);padding:3px 8px;border-radius:6px;border:1px solid var(--glass-border);"></span>
+        <span id="modalDate" style="font-size:0.75rem;color:var(--text-muted);padding:3px 8px;border-radius:6px;border:1px solid var(--glass-border);"></span>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <a id="modalPlayBtn" class="btn-play" target="_blank" style="padding:10px 28px;font-size:0.95rem;">▶ Play Now</a>
+        <button onclick="shareGame()" class="btn-ghost" style="padding:10px 20px;">📤 Share</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // GAME DATABASE — Published games managed by Hermes
+    // ============================================================
+    const gamesDB = [
+      {
+        id: 'space-dodger',
+        title: 'Space Dodger',
+        dev: 'Hermes Engine',
+        desc: 'Navigate a starship through asteroid fields in deep space. Speed increases over time — how long can you survive? Pure web canvas, zero dependencies.',
+        platforms: ['web'],
+        status: 'live',
+        version: '1.0.0',
+        icon: '🚀',
+        url: '/static/space-dodger/',
+        date: 'Aug 2026'
+      },
+      {
+        id: 'neon-merge',
+        title: 'Neon Merge',
+        dev: 'Hermes Engine',
+        desc: 'Merge matching tiles in this addictive 2048-style puzzle. Combine numbers, set high scores — minimalist neon brain trainer.',
+        platforms: ['web'],
+        status: 'live',
+        version: '1.0.0',
+        icon: '🧩',
+        url: '/static/number-puzzle/',
+        date: 'Aug 2026'
+      },
+      {
+        id: 'demo-game-1',
+        title: 'Coming Soon',
+        dev: 'Hermes Engine',
+        desc: 'First Unity title currently in pipeline. WebGL build with AppLovin MAX ad mediation. Rewarded video, interstitial, and banner ad formats configured.',
+        platforms: ['web', 'pc', 'mobile'],
+        status: 'draft',
+        version: '0.1.0',
+        icon: '🎯',
+        url: '#',
+        date: 'TBD'
+      },
+      {
+        id: 'demo-game-2',
+        title: 'Next Title',
+        dev: 'Hermes Engine',
+        desc: 'Second project in development queue. Multi-platform build targeting WebGL, Steam, and Android. Ad mediation injected at compile time.',
+        platforms: ['web', 'pc'],
+        status: 'draft',
+        version: '0.0.1',
+        icon: '🎮',
+        url: '#',
+        date: 'TBD'
+      }
+    ];
+
+    // ============================================================
+    // RENDER GAMES
+    // ============================================================
+    const grid = document.getElementById('gameGrid');
+    let activeFilter = 'all';
+
+    function renderGames(filter) {
+      const filtered = filter === 'all'
+        ? gamesDB
+        : gamesDB.filter(g => {
+            if (filter === 'active') return g.status === 'live';
+            if (filter === 'beta') return g.status === 'beta';
+            if (filter === 'draft') return g.status === 'draft';
+            return g.platforms.includes(filter);
+          });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state fade-in">
+            <div class="emoji">🏗️</div>
+            <h3>No Games in This Category</h3>
+            <p>Games compiled by the Hermes pipeline will appear here once built and published.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(g => {
+        const ribbonClass = g.status === 'live' ? 'ribbon-live' : g.status === 'beta' ? 'ribbon-beta' : 'ribbon-draft';
+        const ribbonText = g.status === 'live' ? 'Live' : g.status === 'beta' ? 'Beta' : 'In Dev';
+
+        const platformChips = g.platforms.map(p => {
+          const cls = p === 'web' ? 'chip-web' : p === 'pc' ? 'chip-pc' : 'chip-mobile';
+          const label = p === 'web' ? '🌐 WebGL' : p === 'pc' ? '🖥️ PC' : '📱 Mobile';
+          return `<span class="platform-chip ${cls}">${label}</span>`;
+        }).join('');
+
+        const playBtn = g.status === 'live' || g.status === 'beta'
+          ? `<a href="${g.url}" class="btn-play">▶ Play</a>`
+          : `<span class="btn-ghost" style="cursor:default;opacity:0.5;">⏳ In Progress</span>`;
+
+        return `
+          <div class="game-card fade-in">
+            <div class="game-thumb" style="background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(6,182,212,0.08));">
+              <span style="font-size:4rem;filter:grayscale(${g.status === 'live' ? 0 : 0.5});">${g.icon}</span>
+              <div class="game-platforms">${platformChips}</div>
+              <div class="status-ribbon ${ribbonClass}">${ribbonText}</div>
+            </div>
+            <div class="game-body">
+              <div class="game-title">${g.title}</div>
+              <div class="game-dev">by ${g.dev}</div>
+              <div class="game-desc">${g.desc}</div>
+              <div class="game-meta">
+                <span class="game-version">v${g.version}</span>
+                <div class="game-actions">
+                  ${playBtn}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = btn.dataset.filter;
+        renderGames(activeFilter);
+      });
+    });
+
+    // Initial render
+    renderGames('all');
+
+    // Update stat counters
+    function updateStats() {
+      const live = gamesDB.filter(g => g.status === 'live').length;
+      const total = gamesDB.length;
+      document.getElementById('statPublished').textContent = live;
+    }
+    updateStats();
+
+    // ============================================================
+    // GAME DETAIL MODAL
+    // ============================================================
+    let currentGame = null;
+
+    document.addEventListener('click', function(e) {
+      const card = e.target.closest('.game-card');
+      if (card) {
+        const idx = Array.from(document.querySelectorAll('.game-card')).indexOf(card);
+        const filtered = getFilteredGames();
+        if (filtered[idx]) {
+          openModal(filtered[idx]);
+        }
+      }
+    });
+
+    function getFilteredGames() {
+      const filter = activeFilter;
+      if (filter === 'all') return gamesDB;
+      if (filter === 'active') return gamesDB.filter(g => g.status === 'live');
+      if (filter === 'beta') return gamesDB.filter(g => g.status === 'beta');
+      if (filter === 'draft') return gamesDB.filter(g => g.status === 'draft');
+      return gamesDB.filter(g => g.platforms.includes(filter));
+    }
+
+    function openModal(game) {
+      currentGame = game;
+      document.getElementById('modalIcon').textContent = game.icon;
+      document.getElementById('modalTitle').textContent = game.title;
+      document.getElementById('modalDev').textContent = 'by ' + game.dev;
+      document.getElementById('modalDesc').textContent = game.desc;
+      document.getElementById('modalVersion').textContent = 'v' + game.version;
+      document.getElementById('modalDate').textContent = game.date;
+      const platforms = game.platforms.map(p => {
+        const cls = p === 'web' ? 'chip-web' : p === 'pc' ? 'chip-pc' : 'chip-mobile';
+        const label = p === 'web' ? '🌐 WebGL' : p === 'pc' ? '🖥️ PC' : '📱 Mobile';
+        return `<span class="platform-chip ${cls}">${label}</span>`;
+      }).join('');
+      document.getElementById('modalPlatforms').innerHTML = platforms;
+      const playBtn = document.getElementById('modalPlayBtn');
+      if (game.status === 'live' || game.status === 'beta') {
+        playBtn.href = game.url;
+        playBtn.style.display = 'inline-flex';
+      } else {
+        playBtn.style.display = 'none';
+      }
+      document.getElementById('gameModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('gameModal').style.display = 'none';
+    }
+
+    // Close modal on overlay click
+    document.getElementById('gameModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    function shareGame() {
+      if (!currentGame) return;
+      const url = 'https://games.pembantu.online' + currentGame.url;
+      const text = `🎮 ${currentGame.title} — Play on Hermes Game Engine!`;
+      if (navigator.share) {
+        navigator.share({ title: currentGame.title, text: text, url: url });
+      } else {
+        navigator.clipboard.writeText(url).then(() => {
+          const btn = document.querySelector('#gameModal .btn-ghost');
+          btn.textContent = '✅ Copied!';
+          setTimeout(() => btn.textContent = '📤 Share', 2000);
+        });
+      }
+    }
+  </script>
+</body>
+</html>
