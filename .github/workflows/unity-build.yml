@@ -33,9 +33,6 @@ on:
 
 # Global environment variables available to all jobs
 env:
-  UNITY_USERNAME: ${{ secrets.UNITY_USERNAME }}
-  UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-  UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
   UNITY_VERSION: 2022.3.17f1   # <-- Update to match your project's Unity version
 
 concurrency:
@@ -92,30 +89,14 @@ jobs:
             Library-
 
       # ---------------------------------------------------
-      # 3. Activate Unity license
-      # ---------------------------------------------------
-      - name: 🔑 Activate Unity License
-        run: |
-          # Download and install the license activation script
-          wget -q -O unity_license_activate.sh \
-            https://raw.githubusercontent.com/game-ci/unity-activate/main/unity_license_activate.sh
-          chmod +x unity_license_activate.sh
-
-          # Create the license file from secret
-          echo "${{ secrets.UNITY_LICENSE }}" > ./UnityLicense.ulf
-
-          # Activate
-          ./unity_license_activate.sh ./UnityLicense.ulf
-
-      # ---------------------------------------------------
-      # 4. Unity Build (via Docker)
+      # 3. Unity Build (via Docker) — auto-activates license via serial
       # ---------------------------------------------------
       - name: 🔨 Unity Build — ${{ matrix.target }}
         uses: game-ci/unity-builder@v4
         env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-          UNITY_EMAIL: ${{ secrets.UNITY_USERNAME }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
           targetPlatform: ${{ matrix.target }}
           projectPath: .
@@ -127,7 +108,7 @@ jobs:
           customParameters: ${{ github.event.inputs.build_options || '' }}
 
       # ---------------------------------------------------
-      # 5. Upload build artifacts
+      # 4. Upload build artifacts
       # ---------------------------------------------------
       - name: 📤 Upload Build Artifact — ${{ matrix.target }}
         uses: actions/upload-artifact@v4
@@ -136,9 +117,9 @@ jobs:
           path: ${{ matrix.artifact_path }}
 
       # ---------------------------------------------------
-      # 6. (WebGL only) Upload as downloadable .zip for easy testing
+      # 5. (WebGL only) Package as downloadable .zip
       # ---------------------------------------------------
-      - name: 🌐 Package & Upload WebGL Downloadable
+      - name: 🌐 Package WebGL Downloadable
         if: matrix.target == 'WebGL'
         run: |
           cd Builds/WebGL
@@ -151,17 +132,6 @@ jobs:
         with:
           name: hermes-webgl-downloadable
           path: hermes-webgl.zip
-
-      # ---------------------------------------------------
-      # 7. Cleanup: Deactivate Unity license
-      # ---------------------------------------------------
-      - name: 🧹 Deactivate Unity License
-        if: always()
-        run: |
-          wget -q -O unity_license_deactivate.sh \
-            https://raw.githubusercontent.com/game-ci/unity-activate/main/unity_license_deactivate.sh
-          chmod +x unity_license_deactivate.sh
-          ./unity_license_deactivate.sh || true
 
   # =========================================================================
   # Deploy WebGL build to games.pembantu.online
@@ -200,7 +170,7 @@ jobs:
           echo "Deployed to: https://games.pembantu.online/builds/$GAME_NAME/"
 
   # =========================================================================
-  # Notification job — runs after all builds complete
+  # Notification job
   # =========================================================================
   notify:
     name: 📬 Notify
