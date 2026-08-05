@@ -32,7 +32,7 @@ on:
         type: string
 
 env:
-  UNITY_VERSION: 2022.3.17f1
+  UNITY_VERSION: 6000.5.7f1
 
 concurrency:
   group: unity-build-${{ github.ref }}
