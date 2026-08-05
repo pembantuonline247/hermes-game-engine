@@ -1,0 +1,47 @@
+# ============================
+# Unity
+# ============================
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# ============================
+# Build logs
+# ============================
+build_*.txt
+*.log
+
+# ============================
+# IDE
+# ============================
+.vs/
+.vscode/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+
+# ============================
+# OS
+# ============================
+.DS_Store
+Thumbs.db
+
+# ============================
+# Project specific
+# ============================
+local_build.sh
+index.html
+portal-index.html
+deploy.sh
+BUILDER.md
+README.md
+STORES.md
+Pipelines/
+.github/
