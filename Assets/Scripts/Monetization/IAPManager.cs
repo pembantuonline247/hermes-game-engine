@@ -126,7 +126,7 @@ namespace Hermes.GameEngine.Monetization
         {
             if (!IsInitialized || string.IsNullOrEmpty(productId)) return false;
             var def = _products.Find(p => p.Id == productId);
-            if (def == null) return false;
+            if (def.Id == null) return false;
 #if UNITY_EDITOR
             StartCoroutine(SimulateEditorPurchase(productId));
 #endif
