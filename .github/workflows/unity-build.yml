@@ -134,7 +134,7 @@ jobs:
           path: hermes-webgl.zip
 
   # =========================================================================
-  # Deploy WebGL build to games.pembantu.online
+  # Deploy WebGL build to games.pembantu.online (VPS)
   # =========================================================================
   deploy-webgl:
     name: 🚀 Deploy WebGL → VPS
@@ -168,6 +168,41 @@ jobs:
           ssh -i ~/.ssh/dealpulse_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
             "sudo chown -R nginx:nginx /opt/games/builds/$GAME_NAME"
           echo "Deployed to: https://games.pembantu.online/builds/$GAME_NAME/"
+
+  # =========================================================================
+  # Deploy WebGL build to itch.io via butler
+  # =========================================================================
+  deploy-itchio:
+    name: 🎮 Deploy WebGL → itch.io
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: |
+      always() &&
+      needs.build.result == 'success' &&
+      (github.event_name != 'workflow_dispatch' || github.event.inputs.target_platform == '' || github.event.inputs.target_platform == 'WebGL')
+    steps:
+      - name: 📥 Download WebGL Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: hermes-webgl
+          path: webgl-build
+
+      - name: ⬇️ Install Butler
+        run: |
+          curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST
+          unzip butler.zip
+          chmod +x butler
+          ./butler version
+
+      - name: 🚀 Push to itch.io
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+          ITCH_USER: ${{ secrets.ITCH_USER }}
+          ITCH_GAME: ${{ secrets.ITCH_GAME }}
+        run: |
+          export PATH="$PATH:$(pwd)"
+          butler push --if-changed webgl-build "$ITCH_USER/$ITCH_GAME:html5"
+          echo "✅ Published to https://$ITCH_USER.itch.io/$ITCH_GAME"
 
   # =========================================================================
   # Notification job
