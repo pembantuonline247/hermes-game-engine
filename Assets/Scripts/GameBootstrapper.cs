@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using Hermes.SpaceDodger.Core;
 using Hermes.GameEngine.Monetization;
 using Hermes.GameEngine.Analytics;
+using Hermes.GameEngine.Online;
 
 namespace Hermes.SpaceDodger
 {
@@ -51,6 +52,8 @@ namespace Hermes.SpaceDodger
         {
             var go = new GameObject("GameManager");
             go.AddComponent<GameManager>();
+            // Online services — auto-login (guest), leaderboard, cloud sync
+            if (OnlineManager.Instance != null) { }
         }
 
         private void CreatePlayer()
