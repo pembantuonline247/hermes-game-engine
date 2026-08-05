@@ -52,9 +52,27 @@ namespace Hermes.SpaceDodger.Core
             if (isDead || GameManager.Instance == null || GameManager.Instance.State != GameManager.GameState.Playing)
                 return;
 
-            float move = Input.GetAxisRaw("Horizontal");
             Vector3 pos = transform.position;
-            pos.x += move * moveSpeed * Time.deltaTime;
+
+            // Keyboard input (A/D, arrow keys)
+            float move = Input.GetAxisRaw("Horizontal");
+            if (Mathf.Abs(move) > 0.01f)
+            {
+                pos.x += move * moveSpeed * Time.deltaTime;
+            }
+            // Mouse / Touch input
+            else if (Input.GetMouseButton(0) || Input.touchCount > 0)
+            {
+                Vector3 inputPos;
+                if (Input.touchCount > 0)
+                    inputPos = Input.GetTouch(0).position;
+                else
+                    inputPos = Input.mousePosition;
+
+                Vector3 worldPos = Camera.main.ScreenToWorldPoint(inputPos);
+                pos.x = Mathf.Lerp(pos.x, worldPos.x, moveSpeed * Time.deltaTime);
+            }
+
             pos.x = Mathf.Clamp(pos.x, -boundaryX, boundaryX);
             transform.position = pos;
         }
