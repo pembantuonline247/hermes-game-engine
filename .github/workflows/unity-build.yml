@@ -75,12 +75,22 @@ jobs:
             Library-${{ matrix.target }}-
             Library-
 
+      # ---------------------------------------------------
+      # Unity Personal license activation via Named User Licensing
+      # (email + password — no serial needed for Personal)
+      # ---------------------------------------------------
+      - name: 🔑 Activate Unity License (Personal / NUL)
+        uses: game-ci/unity-activate@v2
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+
       - name: 🔨 Unity Build — ${{ matrix.target }}
         uses: game-ci/unity-builder@v4
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          UNITY_LICENSE: ${{ env.UNITY_LICENSE }}
         with:
           targetPlatform: ${{ matrix.target }}
           projectPath: .
