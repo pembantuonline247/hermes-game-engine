@@ -31,9 +31,8 @@ on:
         default: ''
         type: string
 
-# Global environment variables available to all jobs
 env:
-  UNITY_VERSION: 2022.3.17f1   # <-- Update to match your project's Unity version
+  UNITY_VERSION: 2022.3.17f1
 
 concurrency:
   group: unity-build-${{ github.ref }}
@@ -44,7 +43,7 @@ jobs:
     name: Build — ${{ matrix.target }}
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false          # Let other matrix legs finish even if one fails
+      fail-fast: false
       matrix:
         target: [WebGL, StandaloneWindows64, Android]
         include:
@@ -61,24 +60,12 @@ jobs:
             artifact_name: hermes-android
             artifact_path: Builds/Android
 
-    # If a manual override was supplied, skip matrix entries that don't match
-    if: |
-      (github.event_name != 'workflow_dispatch') ||
-      (github.event.inputs.target_platform == '') ||
-      (github.event.inputs.target_platform == matrix.target)
-
     steps:
-      # ---------------------------------------------------
-      # 1. Checkout repository
-      # ---------------------------------------------------
       - name: 📦 Checkout
         uses: actions/checkout@v4
         with:
           lfs: true
 
-      # ---------------------------------------------------
-      # 2. Cache Unity Library folder (massive speed-up)
-      # ---------------------------------------------------
       - name: 💾 Cache Library folder
         uses: actions/cache@v4
         with:
@@ -88,9 +75,6 @@ jobs:
             Library-${{ matrix.target }}-
             Library-
 
-      # ---------------------------------------------------
-      # 3. Unity Build (via Docker) — auto-activates license via serial
-      # ---------------------------------------------------
       - name: 🔨 Unity Build — ${{ matrix.target }}
         uses: game-ci/unity-builder@v4
         env:
@@ -107,18 +91,12 @@ jobs:
           allowDirtyBuild: false
           customParameters: ${{ github.event.inputs.build_options || '' }}
 
-      # ---------------------------------------------------
-      # 4. Upload build artifacts
-      # ---------------------------------------------------
       - name: 📤 Upload Build Artifact — ${{ matrix.target }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.artifact_path }}
 
-      # ---------------------------------------------------
-      # 5. (WebGL only) Package as downloadable .zip
-      # ---------------------------------------------------
       - name: 🌐 Package WebGL Downloadable
         if: matrix.target == 'WebGL'
         run: |
@@ -160,7 +138,7 @@ jobs:
 
       - name: 🚀 Deploy to VPS
         run: |
-          GAME_NAME="auto-deploy-${{ github.sha }}"
+          GAME_NAME="space-dodger"
           ssh -i ~/.ssh/dealpulse_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
             "sudo mkdir -p /opt/games/builds/$GAME_NAME"
           scp -i ~/.ssh/dealpulse_key -r webgl-build/* \
